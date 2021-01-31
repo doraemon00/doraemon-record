@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div>Begin</div>
+    <ul>
+      <li>Information</li>
+    </ul>
+    <div>End</div>
+    <script>
+      //dom 的类数组如何遍历以及如何转成数组
+      // for ... of
+      // Array.from()
+
+      //   for (let i = 0; i < document.body.childNodes.length; i++) {
+      //     console.log(document.body.childNodes[i]); // Text, DIV, Text, UL, ..., SCRIPT
+      //   }
+      console.log(Array.from(document.body.childNodes));
+      for (let node of document.body.childNodes) {
+        console.log(node);
+      }
+    </script>
+  </body>
+</html>
