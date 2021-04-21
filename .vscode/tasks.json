@@ -1,0 +1,18 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "type": "typescript",
+      "tsconfig": "TypeScript/01_TypeScript/02_vscode/tsconfig.json",
+      "option": "watch",
+      "problemMatcher": ["$tsc-watch"],
+      "group": "build",
+      "label": "tsc: 监视 - TypeScript/01_TypeScript/02_vscode/tsconfig.json",
+    //   "presentation": {
+    //     "reveal": "silent",
+    //     "clear": true,
+    //     "panel": "new"
+    //   }
+    }
+  ]
+}
