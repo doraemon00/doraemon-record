@@ -49,6 +49,56 @@
           }
           return listString;
         };
+
+
+        // 3.insert 方法  
+        LinkedList.prototype.insert = function(position,data){
+          // 对 position 进行越界判断 
+          if(position < 0 || position > this.length) return false
+
+          var newNode = new Node(data)
+          // 判断插入的位置是否是第一个
+          if(position == 0){
+              newNode.next = this.head
+              this.head = newNode
+          }else{
+              var index = 0
+              var current = this.head
+              var previous = null
+              while(index++ < position){
+                previous = current
+                current = current.next
+              }
+              newNode.next = current
+              previous.next = newNode
+          }
+          this.length += 1
+
+          return true
+        }
+
+
+        // 4.get 方法
+        LinkedList.prototype.get = function(position){
+          // 越界判断
+          if(position < 0 || position >= this.length) return null
+
+          // 获取对应的值
+          var current = this.head
+          var index = 0
+          while(index++ < position){
+            current = current.next
+          }
+          return current.data
+
+        }
+
+
+
+
+
+
+
       }
     </script>
   </body>

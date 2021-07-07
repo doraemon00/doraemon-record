@@ -5,6 +5,7 @@ import { warn, makeMap, isNative } from '../util/index'
 
 let initProxy
 
+// 非生产环境下 才会对 initProxy 进行赋值
 if (process.env.NODE_ENV !== 'production') {
   const allowedGlobals = makeMap(
     'Infinity,undefined,NaN,isFinite,isNaN,' +
@@ -34,6 +35,7 @@ if (process.env.NODE_ENV !== 'production') {
     )
   }
 
+  // 判断宿主环境是否支持 js 原生的 Proxy 特性的 
   const hasProxy =
     typeof Proxy !== 'undefined' && isNative(Proxy)
 
@@ -75,13 +77,15 @@ if (process.env.NODE_ENV !== 'production') {
     }
   }
 
+  // 初始化 initProxy
   initProxy = function initProxy (vm) {
     if (hasProxy) {
       // determine which proxy handler to use
       const options = vm.$options
       const handlers = options.render && options.render._withStripped
         ? getHandler
-        : hasHandler
+        : hasHandler //一般都是这个 
+        // 代理 vm 对象 
       vm._renderProxy = new Proxy(vm, handlers)
     } else {
       vm._renderProxy = vm
