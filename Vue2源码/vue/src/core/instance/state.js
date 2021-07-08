@@ -36,6 +36,8 @@ const sharedPropertyDefinition = {
   set: noop
 }
 
+// proxy 函数的原理是通过 Object.defineProperty 函数在实例对象 vm 上定义与data数据字段同名的访问器属性
+// 并且这些属性代理的值是 vm._data 上对应属性的值
 export function proxy (target: Object, sourceKey: string, key: string) {
   sharedPropertyDefinition.get = function proxyGetter () {
     return this[sourceKey][key]
@@ -46,6 +48,7 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+//用于初始化 data 选项的代码 
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
@@ -54,6 +57,7 @@ export function initState (vm: Component) {
   if (opts.data) {
     initData(vm)
   } else {
+    // $data属性是一个访问器属性，其代理的值就是 _data
     observe(vm._data = {}, true /* asRootData */)
   }
   if (opts.computed) initComputed(vm, opts.computed)
@@ -112,9 +116,15 @@ function initProps (vm: Component, propsOptions: Object) {
 
 function initData (vm: Component) {
   let data = vm.$options.data
+  // 此处判断data数据类型 
+  /**
+   * 进行判断的原因是
+   * 这是因为 beforeCreate 生命周期钩子函数是在 mergeOptions 函数之后 initData 之前被调用的，如果在 beforeCreate 生命周期钩子函数中修改了 vm.$options.data 的值，那么在 initData 函数中对于 vm.$options.data 类型的判断就是必要的了。
+   */
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
+    // 判断变量data是不是一个纯对象
   if (!isPlainObject(data)) {
     data = {}
     process.env.NODE_ENV !== 'production' && warn(
@@ -130,7 +140,9 @@ function initData (vm: Component) {
   let i = keys.length
   while (i--) {
     const key = keys[i]
+    // 在非生产环境下
     if (process.env.NODE_ENV !== 'production') {
+      // 如果data数据的key与methods对象中定义的函数名称相同，那么会打印一个警告
       if (methods && hasOwn(methods, key)) {
         warn(
           `Method "${key}" has already been defined as a data property.`,
@@ -138,12 +150,16 @@ function initData (vm: Component) {
         )
       }
     }
+    // data数据字段的key已经在props中有定义了，那么就会打印警告
     if (props && hasOwn(props, key)) {
       process.env.NODE_ENV !== 'production' && warn(
         `The data property "${key}" is already declared as a prop. ` +
         `Use prop default value instead.`,
         vm
       )
+      // 判断定义在 data 中的key是否保留键。 
+      // 是通过判断一个字符串的第一个字符是不是$或者_来决定是否保留的，vue是不会代理这些字段开头的
+      // 因为Vue自身的属性和方法都是以$或_开头的，所以是为了避免冲突
     } else if (!isReserved(key)) {
       proxy(vm, `_data`, key)
     }
@@ -152,6 +168,8 @@ function initData (vm: Component) {
   observe(data, true /* asRootData */)
 }
 
+// 两个参数 data选项 Vue实例对象 
+// 此函数的作用就是通过调用data函数获取真正的数据对象并返回
 export function getData (data: Function, vm: Component): any {
   // #7573 disable dep collection when invoking data getters
   pushTarget()
