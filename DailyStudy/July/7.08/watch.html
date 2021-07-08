@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+</head>
+<body>
+    <script>
+        // const ins = new Vue({
+        //     data:{
+        //         a:1
+        //     }
+        // })
+        // 可以使用 $watch 观测一个字段 
+        // ins.$watch ("a",()=>{
+        //     console.log("修改了a")
+        // })
+        // ins.a = 2
+
+
+        const data = {
+            a: 1
+        }
+        
+        // dep 数组就是我们所谓的筐
+        const dep = []
+        Object.defineProperty(data,"a",{
+            set(){
+                // 当属性被设置的时候，将筐里的依赖都执行一次
+                dep.forEach(fn=>fn())
+                // console.log("设置了属性a")
+            },
+            get(){
+                // 当属性被获取的时候，把依赖放到筐里
+                dep.push(Target)
+                // console.log("读取了属性a")
+            }
+        })
+
+        // Target是全局变量
+        let Target = null
+        function $watch(exp,fn){
+
+            Target= fn
+            // 读取字段值，触发get函数
+            data[exp]
+        }
+
+        $watch('a',()=>{
+            console.log("第一个依赖")
+        })
+        $watch('a', () => {
+            console.log('第二个依赖')
+        })
+
+        data.a = 3
+
+
+
+
+
+        // 设置了属性
+        // data.a = 2
+
+
+
+
+
+    </script>
+</body>
+</html>
