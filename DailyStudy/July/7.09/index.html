@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+
+</head>
+<body>
+    <button class="submit">点我啊</button>
+    <script src="./node_modules/jquery/dist/jquery.min.js"></script>
+    <script>
+        // 创建一个事件池 $.Callbacks()
+        let $pond1 = $.Callbacks()
+        $('.submit').click(function(){
+            // 点击的时候通知事件池中的方法执行,而且还可以给每个方法都传递实参
+            $pond1.fire(100,200)
+        })
+
+
+        let fn1 = function(){
+            console.log(1)
+        }
+        let fn2 = function(){
+            console.log(2)
+        }
+        let fn3 = function(){
+            console.log(3)
+        }
+
+        // 把需要做的事情陆续添加到事件池中 $pond.add(func) / $pond.remove(func)
+
+        $pond1.add(fn1)
+        // $pond1.add(fn1)  //JQ中没有做去重处理
+        $pond1.add(fn2)
+        $pond1.add(fn3)
+
+
+    </script>
+    
+    
+</body>
+</html>
