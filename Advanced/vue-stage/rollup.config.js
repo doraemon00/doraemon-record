@@ -1,4 +1,5 @@
 import babel from 'rollup-plugin-babel'
+import resolve from 'rollup-plugin-node-resolve'
 
 export default {
     input:"./src/index.js" , //打包的入口
@@ -9,6 +10,7 @@ export default {
         sourcemap:true, //可以进行源代码调试
     },
     plugins:[
+        resolve(),
         babel({
             exclude:'node_modules/**'  //glob写法， 去掉node_modules 下的所有文件夹下的文件
         })
