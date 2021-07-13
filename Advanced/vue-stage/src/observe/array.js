@@ -13,8 +13,14 @@ let methods = [
     'splice'
 ]
 methods.forEach(method =>{
-    arrayMethods[method] = function(){
+    arrayMethods[method] = function(...args){
         // console.log("数组方法进行重写操作")
+        // 数组新增的 要看一下是不是对象，如果是对象，继续进行劫持 
+
+        // 需要调用数组原生逻辑
+        oldArrayPrototype[method].call(this,...args)
+
+        // todo 可以添加自己逻辑 函数劫持 切片
     }
 })
 

@@ -4,16 +4,21 @@ import { arrayMethods } from "./array";
 // 1. 每个对象都有一个 __proto__ 属性，它指向所属类的原型 fn.__proto__ = Function.prototype
 // 2. 每个原型上都有一个constructor属性指向函数本身 Function.prototype.constructor = Function
 
-
-
 class Observe {
   constructor(value) {
     if (isArray(value)) {
-        // 更改数组原型方法
-        value.__proto__ = arrayMethods; //重写数组的方法
+      // 更改数组原型方法
+      value.__proto__ = arrayMethods; //重写数组的方法
+
+      this.observeArray(value);
     } else {
       this.walk(value); //核心就是循环对象
     }
+  }
+
+  //递归遍历数组，对数组内部的对象再次重写 [[]] [{}]
+  observeArray(data) {
+    data.forEach((item) => observe(item)); //数组里面如果是引用类型那么是响应式的
   }
 
   walk(data) {
@@ -39,7 +44,9 @@ function defineReactive(obj, key, value) {
       return value; //闭包 此value会像上层的value进行查找
     },
     set(newValue) {
+      // 如果设置的是一个对象那么会再次进行劫持
       if (newValue === value) return;
+      observe(newValue);
       value = newValue;
     },
   });

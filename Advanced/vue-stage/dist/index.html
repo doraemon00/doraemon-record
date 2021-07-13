@@ -17,6 +17,8 @@
         // vue 模式 并不是 mvvm vue默认只是做视图的
         // Object.defineProperty 将对象中原有的属性，更改成带有 get set 的一个属性，这样当修改的时候会触发set方法
 
+        // debugger;
+
         let vm = new Vue({
             el:'#app',
             // 如果数组也使用了defineProperty还是可以实现修改索引触发更新的，但是这种操作概率低，源码中没有采用这种方式
@@ -24,11 +26,30 @@
             // 正常用户修改数组采用的是数组的变异方法 push pop splice unshift reverse sort 
             data:{
                 message:'hello',
-                arr:[1,2,3]
+                // arr:[1,2,3]
+                arr:[{
+                    name:'chu'
+                },
+            100]
             }
         })
 
-        console.log(vm)
+        // debugger;
+
+        // console.log(vm)
+
+        // 什么情况会更新
+        // vm.message = {a:200}
+        // vm.message.b = 100 //vue2 无法劫持到不存在的属性 新增不存在的属性不会更新视图  vm.$set
+
+
+        // vm.arr[0].name = 'doraemon' // 走对象的修改逻辑
+        vm.arr[1] = 200 //如果操作的是数组的索引 那么不会更新 ，不能通过更改数组长度和索引 （无法监控）
+
+        
+    
+
+
     </script>
 </body>
 </html>
