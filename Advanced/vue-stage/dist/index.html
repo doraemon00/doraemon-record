@@ -15,17 +15,20 @@
         // 2.响应式数据变化 能监控到数据变化 并且更新视图 （单向的）
 
         // vue 模式 并不是 mvvm vue默认只是做视图的
-        // Object.defineProperty 将对象中原有的属性，更改成带有 get set 的一个属性，这样当修改的时候会触发
+        // Object.defineProperty 将对象中原有的属性，更改成带有 get set 的一个属性，这样当修改的时候会触发set方法
 
         let vm = new Vue({
             el:'#app',
+            // 如果数组也使用了defineProperty还是可以实现修改索引触发更新的，但是这种操作概率低，源码中没有采用这种方式
+            // 所以 数组 修改索引不会导致视图更新，修改length也不会
+            // 正常用户修改数组采用的是数组的变异方法 push pop splice unshift reverse sort 
             data:{
                 message:'hello',
-                a:{
-                    a:1
-                }
+                arr:[1,2,3]
             }
         })
+
+        console.log(vm)
     </script>
 </body>
 </html>

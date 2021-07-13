@@ -18,7 +18,11 @@ export default Vue
 // 2.会将用户的选项放在 vm.$options 上
 // 3.会对当前属性上搜索有没有data数据， initState
 // 4.有 data 判断data是不是一个函数，如果是函数取返回值initData
-// 5.observe 取观测data中的数据
+// 5.observe 去观测data中的数据 和 vm 没关系，说明data已经变成了响应式
+// 6.vm上像取值也能取到data中的数据 vm._data = data 这样用户能取到data了
+// 7.用户觉得有点麻烦， vm.xxx => vm._data
+
+
 
 // 如果有el需要挂载到页面上
 
