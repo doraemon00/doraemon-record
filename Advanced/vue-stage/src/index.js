@@ -1,4 +1,7 @@
 import {initMixin} from './init'
+import { lifeCycleMixin } from './lifecycle'
+import { renderMixin } from './render'
+
 
 // vue要如何实现，原型模式，所有的功能都通过 原型拓展的方式来添加
 function Vue(options){
@@ -8,6 +11,8 @@ function Vue(options){
 }
 
 initMixin(Vue)
+renderMixin(Vue)
+lifeCycleMixin(Vue)
 
 
 // 导出Vue

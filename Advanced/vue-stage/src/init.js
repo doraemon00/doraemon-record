@@ -1,4 +1,5 @@
 import { compileToFunction } from "./compiler";
+import { mountComponent } from "./lifecycle";
 import { initState } from "./state";
 
 export function initMixin(Vue) {
@@ -42,5 +43,12 @@ export function initMixin(Vue) {
     }
 
     // console.log(opts.render)
+
+    // 这里已经获取到了，一个 render函数的了
+
+    debugger
+    mountComponent(vm)
+
+
   };
 }
