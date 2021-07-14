@@ -6,6 +6,15 @@ import { arrayMethods } from "./array";
 
 class Observe {
   constructor(value) {
+    // 不让 __ob__ 被遍历到，不然会爆栈
+    // value.__ob__ = this; //我给对象和数组添加一个自定义属性 
+
+    Object.defineProperty(value,'__ob__',{
+      value:this,
+      enumerable:false, //标识这个属性不能被列举出来 不能被循环到
+    })
+
+
     if (isArray(value)) {
       // 更改数组原型方法
       value.__proto__ = arrayMethods; //重写数组的方法
@@ -57,6 +66,11 @@ export function observe(value) {
   if (!isObject(value)) {
     return;
   }
+
+  if(value.__ob__){
+    return; //一个对象不需要重新被观测 
+  }
+
 
   // 需要对对象进行观测，最外层必须是一个 { } 不能是数组
 

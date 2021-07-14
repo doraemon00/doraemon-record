@@ -24,6 +24,26 @@
         // 数组新增的 要看一下是不是对象，如果是对象，继续进行劫持 
         // 需要调用数组原生逻辑
         oldArrayPrototype[method].call(this, ...args); // todo 可以添加自己逻辑 函数劫持 切片
+
+        let inserted = null;
+        let ob = this.__ob__;
+
+        switch (method) {
+          case 'splice':
+            //修改 删除 添加  arr.splice(1,0,24)
+            inserted = args.slice(2); //splice方法从第三个参数起 是增添的新数据
+
+            break;
+
+          case 'push':
+          case 'unshift':
+            inserted = args; //调用push和unshift传递的参数就是新增的逻辑
+
+            break;
+        } // inserted[] 遍历数组，看一下对它是否需要进行二次劫持
+
+
+        if (inserted) ob.observeArray(inserted);
       };
     });
 
@@ -31,6 +51,14 @@
 
     class Observe {
       constructor(value) {
+        // 不让 __ob__ 被遍历到，不然会爆栈
+        // value.__ob__ = this; //我给对象和数组添加一个自定义属性 
+        Object.defineProperty(value, '__ob__', {
+          value: this,
+          enumerable: false //标识这个属性不能被列举出来 不能被循环到
+
+        });
+
         if (isArray(value)) {
           // 更改数组原型方法
           value.__proto__ = arrayMethods; //重写数组的方法
@@ -84,6 +112,10 @@
       // 如果value不是对象，则不用观测了
       if (!isObject(value)) {
         return;
+      }
+
+      if (value.__ob__) {
+        return; //一个对象不需要重新被观测 
       } // 需要对对象进行观测，最外层必须是一个 { } 不能是数组
       // 如果一个数据已经被观测过了，就不要在进行观测了，用类来实现，我观测过就增加一个标识， 说明观测过了，在观测的时候可以先检测是否观测过，如果观测过了就跳过检测
 
