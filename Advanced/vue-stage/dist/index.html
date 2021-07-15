@@ -7,24 +7,20 @@
     <title>Document</title>
   </head>
   <body>
-    <div id="app">{{message}}</div>
+    <div id="app">{{name}}</div>
     <script src="vue.js"></script>
     <script>
+        debugger
       let vm = new Vue({
         el: "#app",
-        data: {
-          message: "hello",
-          // arr:[1,2,3]
-          arr: [
-            {
-              name: "chu",
+        data() {
+          return {
+            name: "chu",
+            age: {
+              a: 1,
             },
-            100,
-          ],
+          };
         },
-        // render(){
-
-        // }
       });
     </script>
   </body>

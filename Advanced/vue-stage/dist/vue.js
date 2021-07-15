@@ -244,7 +244,9 @@
       const parentNode = el.parentNode;
       parentNode.insertBefore(elm, el.nextSibing); //el.nextSibing不存在就是null,如果为null，insertBefore 就是appendChild
 
-      parentNode.removeChild(el);
+      parentNode.removeChild(el); //返回最新节点
+
+      return elm;
     } // 面试有问 虚拟节点的实现 -> 如何将虚拟节点渲染成真实节点
 
     function createElm(vnode) {
@@ -285,7 +287,7 @@
       Vue.prototype._update = function (vnode) {
         // 采用的是  先深度遍历 创建节点 （遇到节点就创造节点，递归创建）
         const vm = this;
-        vm.el = patch(vm.$el, vnode);
+        vm.$el = patch(vm.$el, vnode);
       };
     }
 
@@ -443,9 +445,8 @@
 
       for (let key in data) {
         proxy(vm, key, "_data"); //代理vm上的取值和设置值 和 vm._data没关系了
-      }
+      } // data.arr.push(100);
 
-      data.arr.push(100);
     }
 
     function initMixin(Vue) {
@@ -487,9 +488,9 @@
           opts.render = render;
         } // console.log(opts.render)
         // 这里已经获取到了，一个 render函数的了
+        // debugger
 
 
-        debugger;
         mountComponent(vm);
       };
     }
@@ -542,7 +543,7 @@
           render
         } = vm.$options;
         let vnode = render.call(vm);
-        console.log(vnode);
+        return vnode;
       };
     }
 

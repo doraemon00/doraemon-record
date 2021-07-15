@@ -5,6 +5,9 @@ export function patch(el, vnode) {
   const parentNode = el.parentNode;
   parentNode.insertBefore(elm, el.nextSibing); //el.nextSibing不存在就是null,如果为null，insertBefore 就是appendChild
   parentNode.removeChild(el)
+
+  //返回最新节点
+  return elm
 }
 
 // 面试有问 虚拟节点的实现 -> 如何将虚拟节点渲染成真实节点

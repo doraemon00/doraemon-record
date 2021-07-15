@@ -46,7 +46,7 @@ export function initMixin(Vue) {
 
     // 这里已经获取到了，一个 render函数的了
 
-    debugger
+    // debugger
     mountComponent(vm)
 
 

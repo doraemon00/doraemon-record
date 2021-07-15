@@ -22,6 +22,7 @@ export function renderMixin(Vue) {
     const vm = this; //vm中有所有的数据
     let { render } = vm.$options;
     let vnode = render.call(vm);
+    return vnode;
     console.log(vnode);
   };
 }

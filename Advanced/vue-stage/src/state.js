@@ -40,5 +40,5 @@ function initData(vm) {
     proxy(vm, key, "_data"); //代理vm上的取值和设置值 和 vm._data没关系了
   }
 
-  data.arr.push(100);
+  // data.arr.push(100);
 }
