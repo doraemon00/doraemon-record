@@ -14,6 +14,7 @@ class Observer {
     // 数组的情况  改写数组的原型链
     if (isArray(value)) {
       value.__proto__ = arrayMethods; //重写数组的方法
+      this.observeArray(value)
     } else {
       //对象的情况
       // 核心就是循环对象
@@ -22,7 +23,7 @@ class Observer {
   }
 
   observeArray(data) {
-    //递归遍历数组
+    //递归遍历数组 对数组内部的对象再次重写  [[]]  [{}]
     data.forEach((item) => observe(item));
   }
 
@@ -53,6 +54,10 @@ export function observe(value) {
   // 如果不是对象就不用观测 写的有问题
   if (!isObject(value)) {
     return;
+  }
+
+  if(value.__ob__){
+      return //一个对象不需要重新被观测 
   }
 
   return new Observer(value);

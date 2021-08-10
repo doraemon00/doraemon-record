@@ -1,28 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
-</head>
-<body>
+  </head>
+  <body>
     <script src="./vue.js"></script>
     <script>
-        let vm = new Vue({
-            el:'#app',
-            data() {
-                return {
-                    message:"chu",
-                    arr:[1,2,3]
-                }
-            },
-        })
+      //   debugger;
+      let vm = new Vue({
+        el: "#app",
+        data() {
+          return {
+            message: "chu",
+            arr: [{ name: "doraemon" }, {}],
+          };
+        },
+      });
     </script>
     <script>
-        console.log(vm.message)   //可以直接拿到值 不需要 vm.data.message
-        // let arr = []
-        // arr.push(100)
+      //   vm.arr[0].push("hello")
+      // console.log(vm)
+      vm.arr.push({ a: 100 }, { a: 100 }, { a: 100 });
+
+      console.log(vm.arr) 
     </script>
-</body>
+  </body>
 </html>
