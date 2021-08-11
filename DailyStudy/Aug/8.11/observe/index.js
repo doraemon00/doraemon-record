@@ -8,8 +8,9 @@ class Observer {
   }
 
   walk(data) {
-    Object.keys(data).forEach(key=>{ // 要使用defineProperty重新定义
-        defineReactive(data,key,data[key]);
+    Object.keys(data).forEach((key) => {
+      // 要使用defineProperty重新定义
+      defineReactive(data, key, data[key]);
     });
   }
 }
@@ -17,7 +18,7 @@ class Observer {
 // 使一个对象转化为可观测对象
 function defineReactive(obj, key, value) {
   // 递归观测数据
-  observe(value)
+  observe(value);
 
   Object.defineProperty(obj, key, {
     enumerable: true,
@@ -28,7 +29,7 @@ function defineReactive(obj, key, value) {
     },
     set(newVal) {
       if (value === newVal) return;
-      observe(value)
+      observe(newVal);
       console.log(`${key}属性被修改了`);
       value = newVal;
     },
@@ -36,7 +37,7 @@ function defineReactive(obj, key, value) {
 }
 
 function observe(value) {
-    debugger
+  // debugger
   // 如果不是对象 直接return
   if (!isObject(value)) return;
 
