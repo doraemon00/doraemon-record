@@ -7,25 +7,17 @@
     <title>Document</title>
   </head>
   <body>
+    <div id="app">{{message}}</div>
     <script src="./vue.js"></script>
     <script>
-      //   debugger;
       let vm = new Vue({
         el: "#app",
         data() {
           return {
             message: "chu",
-            arr: [{ name: "doraemon" }, {}],
           };
         },
       });
-    </script>
-    <script>
-      //   vm.arr[0].push("hello")
-      // console.log(vm)
-      vm.arr.push({ a: 100 }, { a: 100 }, { a: 100 });
-
-      console.log(vm.arr) 
     </script>
   </body>
 </html>
