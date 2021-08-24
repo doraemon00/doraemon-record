@@ -7,17 +7,31 @@
     <title>Document</title>
   </head>
   <body>
-    <div id="app">{{message}}</div>
+    <div id="app">
+      <li>{{name}}</li>
+      <li>{{age}}</li>
+    </div>
     <script src="./vue.js"></script>
     <script>
+      // debugger
       let vm = new Vue({
         el: "#app",
         data() {
           return {
-            message: "chu",
+            name: "chu",
+            age:18
           };
         },
       });
+
+      // 更新流程
+
+      
+
+
+
+      
     </script>
+
   </body>
 </html>
