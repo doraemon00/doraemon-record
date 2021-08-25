@@ -264,6 +264,61 @@
 
     Dep.target = null;
 
+    function isFunction(val) {
+      return typeof val == "function";
+    }
+    function isObject(val) {
+      return typeof val == "object" && val !== null;
+    }
+    let isArray = Array.isArray;
+    let callbacks = [];
+    let waiting = false;
+
+    function flushCallbacks() {
+      callbacks.forEach(fn => fn());
+      callbacks = [];
+      waiting = false;
+    }
+
+    function nextTick(fn) {
+      callbacks.push(fn);
+
+      if (!waiting) {
+        Promise.resolve().then(flushCallbacks);
+        waiting = true;
+      }
+    } // export function nextTick(fn) {
+    //   return Promise.resolve().then(fn);
+    // }
+
+    let queue = []; //这里存放要更新的watcher
+
+    let has = {}; //用来存储已有的watcher的id
+
+    function flushScheduleQueue() {
+      queue.forEach(watcher => watcher.run());
+      queue = [];
+      has = {};
+      pending = false;
+    }
+
+    let pending = false;
+    function queueWatcher(watcher) {
+      // 一般情况下 写去重 可以采用这种方式
+      let id = watcher.id; //   debugger
+
+      if (has[id] == null) {
+        has[id] = true;
+        queue.push(watcher);
+
+        if (!pending) {
+          //防抖
+          nextTick(flushScheduleQueue);
+          pending = true;
+        }
+      }
+    }
+
     let id = 0;
 
     class Watcher {
@@ -281,7 +336,7 @@
 
         this.getter = fn; // fn就是页面渲染逻辑
 
-        this.get(); //表示上来后就做一次初始化 
+        this.get(); //表示上来后就做一次初始化
       }
 
       addDep(dep) {
@@ -299,10 +354,17 @@
         Dep.target = this;
         this.getter();
         Dep.target = null;
-      }
+      } // 每次更新数据都会同步调用这个 update 方法，我可以将更新的逻辑缓存起来，等同步更新数据的逻辑执行完毕后，依次调用（去重的逻辑）
+
 
       update() {
-        console.log('update');
+        console.log("缓存更新");
+        queueWatcher(this); // console.log("update");
+        // this.get();
+      }
+
+      run() {
+        console.log("真正执行更新");
         this.get();
       }
 
@@ -364,14 +426,6 @@
         vm.$el = patch(vm.$el, vnode);
       };
     }
-
-    function isFunction(val) {
-      return typeof val == "function";
-    }
-    function isObject(val) {
-      return typeof val == "object" && val !== null;
-    }
-    let isArray = Array.isArray;
 
     let oldArrayPrototype = Array.prototype; //让arrayMethods可以通过__proto__ 获取到数组的方法
 
@@ -552,6 +606,8 @@
 
         mountComponent(vm);
       };
+
+      Vue.prototype.$nextTick = nextTick;
     }
 
     function createElement(vm, tag, data = {}, ...children) {

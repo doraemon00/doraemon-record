@@ -1,6 +1,7 @@
 import { compileToFunction } from "./compiler";
 import { mountComponent } from "./lifeCycle";
 import { initState } from "./state";
+import { nextTick } from "./utils";
 
 export function initMixin(Vue) {
   // 在vue的原型上进行挂载
@@ -38,6 +39,8 @@ export function initMixin(Vue) {
     // console.log(opts.render);
 
     //这里已经获取到了一个 render 函数
-    mountComponent(vm)
+    mountComponent(vm);
   };
+
+  Vue.prototype.$nextTick = nextTick;
 }
