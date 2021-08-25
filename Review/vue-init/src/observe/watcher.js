@@ -13,7 +13,7 @@ class Watcher{
          * 因为fn就是vm._update(vm._render()) ,所以就是页面渲染。下面代码意思赋值并调用
          */
         this.getter = fn // fn就是页面渲染逻辑
-        this.getter() //表示上来后就做一次初始化 
+        this.get() //表示上来后就做一次初始化 
     }
 
     addDep(dep){
@@ -33,6 +33,7 @@ class Watcher{
 
     update(){
         console.log('update')
+
         this.get()
     }
 }

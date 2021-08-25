@@ -40,6 +40,7 @@ function defineReactive(obj, key, value) {
   observe(value);
 
   //每个属性都增加一个dep 闭包
+  let dep = new Dep();
 
   Object.defineProperty(obj, key, {
     get() {

@@ -4,6 +4,82 @@
     (global = typeof globalThis !== 'undefined' ? globalThis : global || self, global.Vue = factory());
 }(this, (function () { 'use strict';
 
+    const defaultTagRE = /\{\{((?:.|\r?\n)+?)\}\}/g; // {{   xxx  }}  
+
+    function genProps(attrs) {
+      // {key:value,key:value,}
+      let str = '';
+
+      for (let i = 0; i < attrs.length; i++) {
+        let attr = attrs[i];
+
+        if (attr.name === 'style') {
+          // {name:id,value:'app'}
+          let styles = {};
+          attr.value.replace(/([^;:]+):([^;:]+)/g, function () {
+            styles[arguments[1]] = arguments[2];
+          });
+          attr.value = styles;
+        }
+
+        str += `${attr.name}:${JSON.stringify(attr.value)},`;
+      }
+
+      return `{${str.slice(0, -1)}}`;
+    }
+
+    function gen(el) {
+      if (el.type == 1) {
+        return generate(el); // 如果是元素就递归的生成
+      } else {
+        let text = el.text; // {{}}
+
+        if (!defaultTagRE.test(text)) return `_v('${text}')`; // 说明就是普通文本
+        // 说明有表达式 我需要 做一个表达式和普通值的拼接 ['aaaa',_s(name),'bbb'].join('+)
+        // _v('aaaa'+_s(name) + 'bbb')
+
+        let lastIndex = defaultTagRE.lastIndex = 0;
+        let tokens = []; // <div> aaa{{bbb}} aaa </div>
+
+        let match; // ，每次匹配的时候 lastIndex 会自动向后移动
+
+        while (match = defaultTagRE.exec(text)) {
+          // 如果正则 + g 配合exec 就会有一个问题 lastIndex的问题
+          let index = match.index;
+
+          if (index > lastIndex) {
+            tokens.push(JSON.stringify(text.slice(lastIndex, index)));
+          }
+
+          tokens.push(`_s(${match[1].trim()})`);
+          lastIndex = index + match[0].length;
+        }
+
+        if (lastIndex < text.length) {
+          tokens.push(JSON.stringify(text.slice(lastIndex)));
+        }
+
+        return `_v(${tokens.join('+')})`; // webpack 源码 css-loader  图片处理
+      }
+    }
+
+    function genChildren(el) {
+      let children = el.children;
+
+      if (children) {
+        return children.map(item => gen(item)).join(',');
+      }
+
+      return false;
+    } // _c(div,{},c1,c2,c3,c4)
+
+
+    function generate(ast) {
+      let children = genChildren(ast);
+      let code = `_c('${ast.tag}',${ast.attrs.length ? genProps(ast.attrs) : 'undefined'}${children ? `,${children}` : ''})`;
+      return code;
+    }
+
     const ncname = `[a-zA-Z_][\\-\\.0-9_a-zA-Z]*`; // 匹配标签名的  aa-xxx
 
     const qnameCapture = `((?:${ncname}\\:)?${ncname})`; //  aa:aa-xxx  
@@ -149,16 +225,144 @@
 
     function compileToFunction(template) {
       // 1.将模板变成ast语法树
-      let ast = parserHTML(template);
-      console.log(ast, "ast"); // // 代码优化 标记静态节点
-      // // 2.代码生成
-      // let code = generate(ast);  // 模板引擎的实现原理 都是 new Function + with  ejs jade handlerbar...
-      // let render = new Function(`with(this){return ${code}}`);
-      // return render;
-      // // 1.编译原理
-      // // 2.响应式原理 依赖收集
-      // // 3.组件化开发 （贯穿了vue的流程）
-      // // 4.diff算法 
+      let ast = parserHTML(template); // 代码优化 标记静态节点
+      // 2.代码生成
+
+      let code = generate(ast); // 模板引擎的实现原理 都是 new Function + with  ejs jade handlerbar...
+
+      let render = new Function(`with(this){return ${code}}`);
+      return render; // 1.编译原理
+      // 2.响应式原理 依赖收集
+      // 3.组件化开发 （贯穿了vue的流程）
+      // 4.diff算法 
+    }
+
+    let id$1 = 0;
+
+    class Dep {
+      constructor() {
+        //要把watcher放到dep中
+        this.subs = [];
+        this.id = id$1++;
+      }
+
+      depend() {
+        Dep.target.addDep(this); //在watcher中调用dep的addSub方法
+      } //addSub为每个数据依赖收集器添加需要被监听的watcher
+
+
+      addSub(watcher) {
+        //将当前watcher添加到数据依赖收集器中
+        this.subs.push(watcher); //让dep记住watcher
+      }
+
+      notify() {
+        this.subs.forEach(watcher => watcher.update());
+      }
+
+    }
+
+    Dep.target = null;
+
+    let id = 0;
+
+    class Watcher {
+      constructor(vm, fn, cb, options) {
+        this.vm = vm;
+        this.fn = fn;
+        this.cb = cb;
+        this.options = options;
+        this.id = id++;
+        this.depsId = new Set();
+        this.deps = [];
+        /**
+         * 因为fn就是vm._update(vm._render()) ,所以就是页面渲染。下面代码意思赋值并调用
+         */
+
+        this.getter = fn; // fn就是页面渲染逻辑
+
+        this.get(); //表示上来后就做一次初始化 
+      }
+
+      addDep(dep) {
+        let did = dep.id;
+
+        if (!this.depsId.has(did)) {
+          this.depsId.add(did);
+          this.deps.push(dep); //做了保存id的功能，并且让watcher记住dep
+
+          dep.addSub(this);
+        }
+      }
+
+      get() {
+        Dep.target = this;
+        this.getter();
+        Dep.target = null;
+      }
+
+      update() {
+        console.log('update');
+        this.get();
+      }
+
+    }
+
+    function patch(el, vnode) {
+      const elm = createElm(vnode);
+      const parentNode = el.parentNode;
+      parentNode.insertBefore(elm, el.nextSibling);
+      parentNode.removeChild(el); //返回最新节点
+
+      return elm;
+    }
+
+    function createElm(vnode) {
+      let {
+        tag,
+        data,
+        children,
+        text,
+        vm
+      } = vnode; //我们让虚拟节点和真实节点做一个映射关系，后续某个虚拟节点更新了 我可以跟踪到真实节点，并且更新真实节点
+
+      if (typeof tag === "string") {
+        vnode.el = document.createElement(tag); //如果有data属性，我们需要把data设置到元素上
+
+        updateProperties(vnode.el, data);
+        children.forEach(child => {
+          vnode.el.appendChild(createElm(child));
+        });
+      } else {
+        vnode.el = document.createTextNode(text);
+      }
+
+      return vnode.el;
+    }
+
+    function updateProperties(el, props = {}) {
+      for (let key in props) {
+        el.setAttribute(key, props[key]);
+      }
+    }
+
+    function mountComponent(vm) {
+      //初始化流程
+      let updateComponent = () => {
+        vm._update(vm._render());
+      }; //每个组件都有一个 watcher 我们把这个watcher称之为渲染watcher 
+
+
+      new Watcher(vm, updateComponent, () => {
+        console.log('update');
+      }, true);
+    }
+    function lifeCycleMixin(Vue) {
+      Vue.prototype._update = function (vnode) {
+        //采用的是 先序深度遍历 创建节点（遇到节点就创造节点，递归创建）
+        const vm = this;
+        vm.$el = patch(vm.$el, vnode);
+      };
     }
 
     function isFunction(val) {
@@ -236,17 +440,25 @@
 
     function defineReactive(obj, key, value) {
       // 递归进行观测数据
-      observe(value);
+      observe(value); //每个属性都增加一个dep 闭包
+
+      let dep = new Dep();
       Object.defineProperty(obj, key, {
         get() {
+          if (Dep.target) {
+            dep.depend();
+          }
+
           return value;
         },
 
         set(newValue) {
           if (newValue === value) return;
-          observe(newValue);
-          console.log("修改");
-          value = newValue;
+          observe(newValue); // console.log("修改");
+
+          value = newValue; // 拿到当前的dep里面的watcher依次执行
+
+          dep.notify();
         }
 
       });
@@ -259,7 +471,7 @@
       }
 
       if (value.__ob__) {
-        return; //一个对象不需要重新被观测 
+        return; //一个对象不需要重新被观测
       }
 
       return new Observer(value);
@@ -335,7 +547,62 @@
           let render = compileToFunction(template);
           opts.render = render;
         } // console.log(opts.render);
+        //这里已经获取到了一个 render 函数
 
+
+        mountComponent(vm);
+      };
+    }
+
+    function createElement(vm, tag, data = {}, ...children) {
+      // 返回虚拟节点 _c('',{}....)
+      return vnode(vm, tag, data, children, data.key, undefined);
+    }
+    function createText(vm, text) {
+      // 返回虚拟节点
+      return vnode(vm, undefined, undefined, undefined, undefined, text);
+    }
+
+    function vnode(vm, tag, data, children, key, text) {
+      return {
+        vm,
+        tag,
+        data,
+        children,
+        key,
+        text
+      };
+    } // vnode 其实就是一个对象 用来描述节点的，这个和ast长的很像啊？
+    // ast 描述语法的，他并没有用户自己的逻辑 , 只有语法解析出来的内容
+    // vnode 他是描述dom结构的 可以自己去扩展属性
+
+    function renderMixin(Vue) {
+      Vue.prototype._c = function () {
+        // createElement 创建元素型的节点
+        const vm = this;
+        return createElement(vm, ...arguments);
+      };
+
+      Vue.prototype._v = function (text) {
+        // 创建文本的虚拟节点
+        const vm = this;
+        return createText(vm, text); // 描述虚拟节点是属于哪个实例的
+      };
+
+      Vue.prototype._s = function (val) {
+        // JSON.stingfiy()
+        if (isObject(val)) return JSON.stringify(val);
+        return val;
+      };
+
+      Vue.prototype._render = function () {
+        const vm = this; // vm中有所有的数据 vm.xxx => vm._data.xxx
+
+        let {
+          render
+        } = vm.$options;
+        let vnode = render.call(vm);
+        return vnode;
       };
     }
 
@@ -345,7 +612,9 @@
     } //只是把方法挂载到原型上去了 此处并没有执行
 
 
-    initMixin(Vue); // 导出Vue
+    initMixin(Vue);
+    renderMixin(Vue);
+    lifeCycleMixin(Vue); // 导出Vue
 
     return Vue;
 
