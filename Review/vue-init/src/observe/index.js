@@ -1,5 +1,6 @@
 import { isArray, isObject } from "../utils";
 import { arrayMethods } from "./array";
+import Dep from "./dep";
 
 class Observer {
   constructor(value) {
@@ -14,7 +15,7 @@ class Observer {
     // 数组的情况  改写数组的原型链
     if (isArray(value)) {
       value.__proto__ = arrayMethods; //重写数组的方法
-      this.observeArray(value)
+      this.observeArray(value);
     } else {
       //对象的情况
       // 核心就是循环对象
@@ -37,15 +38,23 @@ class Observer {
 function defineReactive(obj, key, value) {
   // 递归进行观测数据
   observe(value);
+
+  //每个属性都增加一个dep 闭包
+
   Object.defineProperty(obj, key, {
     get() {
+      if (Dep.target) {
+        dep.depend();
+      }
       return value;
     },
     set(newValue) {
       if (newValue === value) return;
       observe(newValue);
-      console.log("修改");
+      // console.log("修改");
       value = newValue;
+      // 拿到当前的dep里面的watcher依次执行
+      dep.notify();
     },
   });
 }
@@ -56,8 +65,8 @@ export function observe(value) {
     return;
   }
 
-  if(value.__ob__){
-      return //一个对象不需要重新被观测 
+  if (value.__ob__) {
+    return; //一个对象不需要重新被观测
   }
 
   return new Observer(value);
