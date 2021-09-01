@@ -14,6 +14,7 @@ methods.forEach((method) => {
     // 通过__ob__ 进行标识这个对象被监控过  （在vue中被监控的对象身上都有一个__ob__ 这个属性）
 
     let inserted = null;
+    //
     let ob = this.__ob__;
     switch (method) {
       case "splice":
@@ -26,5 +27,7 @@ methods.forEach((method) => {
     }
     // 看一下新增的属性是不是对象， 看是否需要进行劫持
     if (inserted) ob.observeArray(inserted);
+    // 通过 ob 拿到dep，调用notify 触发watcher 做视图更新
+    ob.dep.notify();
   };
 });

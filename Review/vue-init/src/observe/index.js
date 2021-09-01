@@ -35,9 +35,23 @@ class Observer {
   }
 }
 
+//让数组里的引用类型都收集依赖   //[[[]],{}]
+function dependArray(value) {
+  for (let i = 0; i < value.length; i++) {
+    let current = value[i];
+    //current 上如果有__ob__，说明是对象，就让dep收集依赖，（只有对象上才有__ob__）
+    current.__ob__ && current.__ob__.dep.depend();
+    //如果内部还是数组继续递归处理
+    if (Array.isArray(current)) {
+      dependArray(current);
+    }
+  }
+}
+
 function defineReactive(obj, key, value) {
   // 递归进行观测数据
-  observe(value);
+  let childOb = observe(value);
+  //childOb 如果有值 那么就是数组或者对象
 
   //每个属性都增加一个dep 闭包
   let dep = new Dep();
@@ -45,7 +59,17 @@ function defineReactive(obj, key, value) {
   Object.defineProperty(obj, key, {
     get() {
       if (Dep.target) {
+        // 对象属性的依赖收集
         dep.depend();
+        // 取属性的时候 会对对应的值（对象本身和数组）进行依赖收集
+        if (childOb) {
+          // 让数组和对象也记住当前的watcher
+          childOb.dep.depend();
+          if (Array.isArray(value)) {
+            //可能是数组套数组的可能
+            dependArray(value);
+          }
+        }
       }
       return value;
     },
