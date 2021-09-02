@@ -50,7 +50,12 @@
           return parentVal.concat(childVal);
         } else {
           // 如果没值 就变成数组
-          return [childVal];
+          // 注意 如果传入的生命周期函数是数组，已经是数组无需在包装成数组
+          if (Array.isArray(childVal)) {
+            return childVal;
+          } else {
+            return [childVal];
+          }
         }
       } else {
         //儿子没有值 无需合并 直接返回父亲即可
