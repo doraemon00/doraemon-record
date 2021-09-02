@@ -1,3 +1,4 @@
+import { initGlobalAPI } from "./global-api";
 import { initMixin } from "./init";
 import { lifeCycleMixin } from "./lifeCycle";
 import { renderMixin } from "./render";
@@ -11,7 +12,7 @@ function Vue(options) {
 initMixin(Vue);
 renderMixin(Vue)
 lifeCycleMixin(Vue)
-
+initGlobalAPI(Vue) //初始化global Api
 
 
 // 导出Vue

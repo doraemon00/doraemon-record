@@ -13,28 +13,35 @@
     </div>
     <script src="./vue.js"></script>
     <script>
-      // debugger
+      Vue.mixin({
+        beforeCreate() {
+          console.log("全局 mixin-beforeCreate1");
+        },
+      });
+      Vue.mixin({
+        beforeCreate() {
+          console.log("全局 mixin-beforeCreate2");
+        },
+      });
       let vm = new Vue({
         el: "#app",
+        beforeCreate: [
+          function () {
+            console.log("局部1");
+          },
+          function () {
+            console.log("局部2");
+          },
+        ],
         data() {
           return {
             name: "chu",
-            age:18
+            age: 18,
           };
         },
       });
 
-      // 更新流程
-      debugger
-      vm.name = "1"
-      vm.name = "2"
-      vm.name = "3"
-      // vm.name = "2"
-      // vm.name = "3"
-
-
-      
+      console.log(vm.$options)
     </script>
-
   </body>
 </html>
