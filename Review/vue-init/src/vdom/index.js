@@ -28,7 +28,6 @@ function vnode(vm, tag, data, children, key, text) {
  * @param {*} oldVnode
  * @returns
  */
-export function isSameVnode(newVnode, oldVnode) {
-  return newVnode.tag === oldVnode.tag && newVnode.key === oldVnode.key;
+ export function isSameVnode(newVnode,oldVnode){
+  return (newVnode.tag === oldVnode.tag) && (newVnode.key == oldVnode.key)
 }
-
