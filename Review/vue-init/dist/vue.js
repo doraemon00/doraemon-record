@@ -296,11 +296,24 @@
         }
       };
     });
+
+    strats.components = function (parentVal, childVal) {
+      let res = Object.create(parentVal); //合并后产生一个新对象。不用原来的
+
+      if (childVal) {
+        for (let key in childVal) {
+          res[key] = childVal[key];
+        }
+      }
+
+      return res;
+    };
     /**
      * 对象合并 将 childVal合并到 parentVal 中
      * @param {*} parentVal
      * @param {*} childVal
      */
+
 
     function mergeOptions(parentVal, childVal) {
       let options = {};
@@ -332,6 +345,15 @@
       return options;
     } // console.log(mergeOptions({a:1},{b:1,a:2}))
 
+    function makeMap(str) {
+      let tagList = str.split(",");
+      return function (tagName) {
+        return tagList.includes(tagName);
+      };
+    }
+
+    const isReservedTag = makeMap("template,script,style,element,content,slot,link,meta,svg,view,button," + "a,div,img,image,text,span,input,switch,textarea,spinner,select," + "slider,slider-neighbor,indicator,canvas," + "list,cell,header,loading,loading-indicator,refresh,scrollable,scroller," + "video,web,embed,tabbar,tabheader,datepicker,timepicker,marquee,countdown");
+
     function initGlobalAPI(Vue) {
       // 全局属性 在每个组件初始化的时候 将这些属性放到每个组件上
       Vue.options = {}; // 为 vue 添加 mixin 静态方法
@@ -344,7 +366,38 @@
         return this;
       };
 
-      Vue.component = function (options) {};
+      Vue.options._base = Vue; // 会产生一个子类
+
+      Vue.extend = function (opt) {
+        const Super = this;
+
+        const Sub = function () {//创造一个组件 其实就是new 这个组件的类（组件初始化）
+        };
+
+        Sub.prototype = Object.create(Super.prototype); //继承原型方法
+
+        Sub.prototype.constructor = Sub; //Object.create 会产生一个新的实例作为子类的原型，此时 constructor 会指向错误
+
+        Sub.options = mergeOptions(Super.options, opt);
+        Sub.mixin = Vue.mixin;
+        return Sub;
+      }; //存放全局组件的
+
+
+      Vue.options.components = {}; // Vue.component -> Vue.extend
+      // definition 可以传入对象或函数
+
+      Vue.component = function (id, definition) {
+        let name = definition.name || id;
+        definition.name = name;
+
+        if (isObject(definition)) {
+          definition = Vue.extend(definition);
+        }
+
+        Vue.options.components[name] = definition;
+        console.log(Vue.options.components);
+      };
 
       Vue.filter = function (options) {};
 
@@ -457,8 +510,33 @@
 
     }
 
+    function createComponent(vm, tag, data, children, key, Ctor) {
+      // console.log(vm, tag, data, children, "组件");
+      if (isObject(Ctor)) {
+        // 组件的定义一定是通过 Vue.extend 进行包裹的
+        Ctor = vm.$options._base.extend(Ctor);
+      } // 每个组件 默认的名字内部都会给你拼接一下
+      // componentOptions 存放了一个重要的属性 Ctor
+
+
+      let componentVnode = vnode(vm, tag, data, undefined, key, undefined, {
+        Ctor,
+        children,
+        tag
+      });
+      return componentVnode;
+    }
+
     function createElement(vm, tag, data = {}, ...children) {
       // 返回虚拟节点 _c('',{}....)
+      // 需要进行拓展  因为会传入自定义组件
+      // 如何区分是组件还是元素节点
+      if (!isReservedTag(tag)) {
+        let Ctor = vm.$options.components[tag]; //组件的初始化就是 new 组件的构造函数
+
+        return createComponent(vm, tag, data, children, data.key, Ctor);
+      }
+
       return vnode(vm, tag, data, children, data.key, undefined);
     }
     function createText(vm, text) {
@@ -466,14 +544,15 @@
       return vnode(vm, undefined, undefined, undefined, undefined, text);
     }
 
-    function vnode(vm, tag, data, children, key, text) {
+    function vnode(vm, tag, data, children, key, text, options) {
       return {
         vm,
         tag,
         data,
         children,
         key,
-        text
+        text,
+        componentOptions: options
       };
     } // vnode 其实就是一个对象 用来描述节点的，这个和ast长的很像啊？
     // ast 描述语法的，他并没有用户自己的逻辑 , 只有语法解析出来的内容
@@ -911,8 +990,10 @@
         // 把用户的选项放到 vm 上，这样在其它方法中都可以获取到 options
         const vm = this; // 此时需要使用 options 与 mixin 合并后的全局 options 在进行一次合并
         // vm.$options = options;
+        // 因为全局定义的内容会混合在当前的实例上 
 
-        vm.$options = mergeOptions(vm.constructor.options, options); // 传入数据 对数据进行操作
+        vm.$options = mergeOptions(vm.constructor.options, options);
+        console.log(vm.$options); // 传入数据 对数据进行操作
 
         initState(vm);
 
@@ -990,59 +1071,6 @@
     renderMixin(Vue);
     lifeCycleMixin(Vue);
     initGlobalAPI(Vue); //初始化global Api
-    // 先生成第一个虚拟节点
-
-    let vm1 = new Vue({
-      data() {
-        return {
-          name: "chu"
-        };
-      }
-
-    }); //将 模板 render1 生成为 render 函数
-
-    /**
-     * 测试用例
-     * <div style="color:blue">{{name}}</div>
-     */
-
-    let render1 = compileToFunction(`<div>
-<li key="A">A</li>
-<li key="B">B</li>
-<li key="C">C</li>
-<li key="D">D</li>
-</div>`); //调用 render 函数产生虚拟节点
-
-    let oldVnode = render1.call(vm1); //将虚拟节点生成真实节点
-
-    let el1 = createElm(oldVnode); //将真实节点渲染到页面上
-
-    document.body.appendChild(el1); //生成第二个虚拟节点
-
-    let vm2 = new Vue({
-      data() {
-        return {
-          name: "doraemon"
-        };
-      }
-
-    });
-    let render2 = compileToFunction(`<div>
-<li key="A" style="color:red">A</li>
-<li key="B" style="color:blue">B</li>
-<li key="C" style="color:yellow">C</li>
-<li key="D" style="color:pink">D</li>
-<li key="E">E</li>
-<li key="F">F</li>
-</div>`);
-    let newVnode = render2.call(vm2); // 初始化完成显示 el1,2秒后移除 el1 显示 el2
-
-    setTimeout(() => {
-      // 比对新老虚拟节点的差异，尽可能复用原有节点，以提升渲染性能
-      patch(oldVnode, newVnode); // let el2 = createElm(newVnode)
-      // document.body.removeChild(el1)
-      // document.body.appendChild(el2)
-    }, 2000); // 导出Vue
 
     return Vue;
 

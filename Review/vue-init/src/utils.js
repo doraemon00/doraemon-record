@@ -61,6 +61,16 @@ lifeCycle.forEach((hook) => {
   };
 });
 
+strats.components = function (parentVal, childVal) {
+  let res = Object.create(parentVal); //合并后产生一个新对象。不用原来的
+  if (childVal) {
+    for (let key in childVal) {
+      res[key] = childVal[key];
+    }
+  }
+  return res;
+};
+
 /**
  * 对象合并 将 childVal合并到 parentVal 中
  * @param {*} parentVal
@@ -93,3 +103,18 @@ export function mergeOptions(parentVal, childVal) {
 }
 
 // console.log(mergeOptions({a:1},{b:1,a:2}))
+
+function makeMap(str) {
+  let tagList = str.split(",");
+  return function (tagName) {
+    return tagList.includes(tagName);
+  };
+}
+
+export const isReservedTag = makeMap(
+  "template,script,style,element,content,slot,link,meta,svg,view,button," +
+    "a,div,img,image,text,span,input,switch,textarea,spinner,select," +
+    "slider,slider-neighbor,indicator,canvas," +
+    "list,cell,header,loading,loading-indicator,refresh,scrollable,scroller," +
+    "video,web,embed,tabbar,tabheader,datepicker,timepicker,marquee,countdown"
+);
