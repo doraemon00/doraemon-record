@@ -11,12 +11,12 @@ export function initMixin(Vue) {
     // 此时需要使用 options 与 mixin 合并后的全局 options 在进行一次合并
     // vm.$options = options;
     // 因为全局定义的内容会混合在当前的实例上 
+    // debugger
     vm.$options = mergeOptions(vm.constructor.options,options);
     console.log(vm.$options)
 
     // 传入数据 对数据进行操作
     initState(vm);
-
     if (vm.$options.el) {
       vm.$mount(vm.$options.el);
     }

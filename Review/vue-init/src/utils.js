@@ -48,7 +48,7 @@ lifeCycle.forEach((hook) => {
       } else {
         // 如果没值 就变成数组
         // 注意 如果传入的生命周期函数是数组，已经是数组无需在包装成数组
-        if (Array.isArray(childVal)) {
+        if (isArray(childVal)) {
           return childVal;
         } else {
           return [childVal];
@@ -91,6 +91,7 @@ export function mergeOptions(parentVal, childVal) {
   function mergeFiled(key) {
     // 设计模式 策略模式
     let strat = strats[key];
+    debugger
     if (strat) {
       // 合并两个值
       options[key] = strat(parentVal[key], childVal[key]);

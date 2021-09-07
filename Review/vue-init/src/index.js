@@ -68,6 +68,11 @@ initGlobalAPI(Vue); //初始化global Api
 //   // document.body.appendChild(el2)
 // },2000)
 
-
 // 导出Vue
 export default Vue;
+
+// 1、Vue.component 注册成全局组件，内部会自动调用 Vue.extend 方法，返回组件的构造函数
+// 2. 组件初始化的时候，会做一个合并 mergerOptions （自己的组件.__proto__ = 全局的组件）
+// 3. 内部会对模板进行编译操作， _c('组件的名字') 做筛查，如果是组件就创造一个组件的虚拟节点，还会判断Ctor ，如果是对象会调用Vue.extend ，所有的组件都是通过 Vue.extend 方法来实现的 （componentOptions 里面放着组件的所有内容，属性的实现，事件的实现，插槽的内容，Ctor）
+
+

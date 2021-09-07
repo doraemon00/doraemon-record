@@ -284,7 +284,7 @@
           } else {
             // 如果没值 就变成数组
             // 注意 如果传入的生命周期函数是数组，已经是数组无需在包装成数组
-            if (Array.isArray(childVal)) {
+            if (isArray(childVal)) {
               return childVal;
             } else {
               return [childVal];
@@ -332,6 +332,7 @@
       function mergeFiled(key) {
         // 设计模式 策略模式
         let strat = strats[key];
+        debugger;
 
         if (strat) {
           // 合并两个值
@@ -510,14 +511,30 @@
 
     }
 
-    function createComponent(vm, tag, data, children, key, Ctor) {
+    function createComponent$1(vm, tag, data, children, key, Ctor) {
       // console.log(vm, tag, data, children, "组件");
       if (isObject(Ctor)) {
         // 组件的定义一定是通过 Vue.extend 进行包裹的
         Ctor = vm.$options._base.extend(Ctor);
-      } // 每个组件 默认的名字内部都会给你拼接一下
-      // componentOptions 存放了一个重要的属性 Ctor
+      }
 
+      data.hook = {
+        // 组件的生命周期
+        init(vnode) {
+          // vnode.componentInstance.$el -> 对应组件渲染完毕后的结果
+          let child = vnode.componentInstance = new Ctor({}); //我想获取组件的真实dom
+
+          child.$mount(); // 所以组件在走挂载的流程时 vm.$el 为null
+          // mount挂载完毕后 会产生一个真实节点，这个节点在 vm.$el上-》 对应的就是组件的真实内容
+        },
+
+        prepatch() {},
+
+        postpatch() {} ///
+
+
+      }; // 每个组件 默认的名字内部都会给你拼接一下
+      // componentOptions 存放了一个重要的属性 Ctor
 
       let componentVnode = vnode(vm, tag, data, undefined, key, undefined, {
         Ctor,
@@ -532,10 +549,12 @@
       // 需要进行拓展  因为会传入自定义组件
       // 如何区分是组件还是元素节点
       if (!isReservedTag(tag)) {
+        //组件
         let Ctor = vm.$options.components[tag]; //组件的初始化就是 new 组件的构造函数
 
-        return createComponent(vm, tag, data, children, data.key, Ctor);
-      }
+        return createComponent$1(vm, tag, data, children, data.key, Ctor);
+      } // 创建元素的虚拟节点
+
 
       return vnode(vm, tag, data, children, data.key, undefined);
     }
@@ -583,7 +602,7 @@
         return elm; // 返回最新节点
       } else {
         // 不管怎么diff 最终想更新渲染 =》 dom操作里去
-        // 只比较同级，如果不一样，儿子就不用比对了， 根据当前节点，创建儿子 全部替换掉 
+        // 只比较同级，如果不一样，儿子就不用比对了， 根据当前节点，创建儿子 全部替换掉
         // diff 算法如何实现？
         if (!isSameVnode(oldVnode, vnode)) {
           // 如果新旧节点 不是同一个，删除老的换成新的
@@ -608,7 +627,7 @@
         let newChildren = vnode.children || []; // 情况1 ：老的有儿子 ， 新没儿子
 
         if (oldChildren.length > 0 && newChildren.length == 0) {
-          el.innerHTML = ''; // 新的有儿子 老的没儿子 直接将新的插入即可
+          el.innerHTML = ""; // 新的有儿子 老的没儿子 直接将新的插入即可
         } else if (newChildren.length > 0 && oldChildren.length == 0) {
           newChildren.forEach(child => el.appendChild(createElm(child)));
         } else {
@@ -715,6 +734,8 @@
       }
     }
 
+    function createComponent(vnode) {}
+
     function createElm(vnode) {
       let {
         tag,
@@ -724,7 +745,12 @@
         vm
       } = vnode;
 
-      if (typeof tag === 'string') {
+      if (typeof tag === "string") {
+        if (createComponent()) {
+          //返回一个组件的真实节点
+          return vnode.componentInstance.$el; // 对应的就是真实节点
+        }
+
         vnode.el = document.createElement(tag);
         updateProperties(vnode);
         children.forEach(child => {
@@ -750,14 +776,14 @@
       for (let key in oldStyle) {
         // 老的样式有 新的没有，就把页面上的样式删除掉
         if (!newStyle[key]) {
-          el.style[key] = '';
+          el.style[key] = "";
         }
       }
 
       for (let key in newProps) {
         //  直接用新的改掉老的就可以了
         // 如果前后一样，浏览器会去检测
-        if (key == 'style') {
+        if (key == "style") {
           for (let key in newStyle) {
             // {style:{color:red}}
             el.style[key] = newStyle[key];
@@ -991,6 +1017,7 @@
         const vm = this; // 此时需要使用 options 与 mixin 合并后的全局 options 在进行一次合并
         // vm.$options = options;
         // 因为全局定义的内容会混合在当前的实例上 
+        // debugger
 
         vm.$options = mergeOptions(vm.constructor.options, options);
         console.log(vm.$options); // 传入数据 对数据进行操作
@@ -1071,6 +1098,8 @@
     renderMixin(Vue);
     lifeCycleMixin(Vue);
     initGlobalAPI(Vue); //初始化global Api
+    // 2. 组件初始化的时候，会做一个合并 mergerOptions （自己的组件.__proto__ = 全局的组件）
+    // 3. 内部会对模板进行编译操作， _c('组件的名字') 做筛查，如果是组件就创造一个组件的虚拟节点，还会判断Ctor ，如果是对象会调用Vue.extend ，所有的组件都是通过 Vue.extend 方法来实现的 （componentOptions 里面放着组件的所有内容，属性的实现，事件的实现，插槽的内容，Ctor）
 
     return Vue;
 
