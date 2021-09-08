@@ -13,11 +13,12 @@ export function initMixin(Vue) {
     // 因为全局定义的内容会混合在当前的实例上 
     // debugger
     vm.$options = mergeOptions(vm.constructor.options,options);
+    
     console.log(vm.$options)
-
     // 传入数据 对数据进行操作
     initState(vm);
     if (vm.$options.el) {
+      // 将数据挂载到页面上（此时 数据已经被劫持）
       vm.$mount(vm.$options.el);
     }
   };

@@ -14,27 +14,27 @@
     <script>
       // 全局组件
       Vue.component("my-button", {
-        template: "<button>你好</button>",
-        data(){
-                return {name:'chu'}
-            }
+        template: "<button>你好{{name}}</button>",
+        data() {
+          return { name: "chu" };
+        },
       });
       new Vue({
         el: "#app",
-        components: {
-          // 局部组件
-          "my-button": {
-            template: "<button>不好</button>",
-            components:{
-                        xxx:{
-                            template:'<div>哈哈</div>'
-                        }
-                    },
-                    data(){
-                        return {name:'zhu'}
-                    }
-          },
-        },
+        // components: {
+        //   // 局部组件
+        //   "my-button": {
+        //     template: "<button>不好</button>",
+        //     // components: {
+        //     //   xxx: {
+        //     //     template: "<div>哈哈</div>",
+        //     //   },
+        //     // },
+        //     data() {
+        //       return { name: "zhu" };
+        //     },
+        //   },
+        // },
       });
     </script>
   </body>

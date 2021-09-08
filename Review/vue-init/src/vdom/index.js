@@ -10,7 +10,7 @@ function createComponent(vm, tag, data, children, key, Ctor) {
     // 组件的生命周期
     init(vnode) {
       // vnode.componentInstance.$el -> 对应组件渲染完毕后的结果
-      let child = (vnode.componentInstance = new Ctor({})); //我想获取组件的真实dom
+      let child = vnode.componentInstance = new Ctor({}); //我想获取组件的真实dom
       child.$mount(); // 所以组件在走挂载的流程时 vm.$el 为null
 
       // mount挂载完毕后 会产生一个真实节点，这个节点在 vm.$el上-》 对应的就是组件的真实内容
@@ -30,14 +30,15 @@ function createComponent(vm, tag, data, children, key, Ctor) {
   return componentVnode;
 }
 
+// 参数：_c('标签', {属性}, ...儿子)
 export function createElement(vm, tag, data = {}, ...children) {
   // 返回虚拟节点 _c('',{}....)
-
   // 需要进行拓展  因为会传入自定义组件
   // 如何区分是组件还是元素节点
 
   if (!isReservedTag(tag)) {
     //组件
+    // 获取组件的构造函数：之前已经保存到了全局 vm.$options.components 上
     let Ctor = vm.$options.components[tag]; //组件的初始化就是 new 组件的构造函数
     return createComponent(vm, tag, data, children, data.key, Ctor);
   }

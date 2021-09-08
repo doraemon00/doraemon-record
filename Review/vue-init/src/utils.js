@@ -38,6 +38,7 @@ let strats = {}; //存放所有策略
 
 let lifeCycle = ["beforeCreate", "created", "beforeMount", "mounted"];
 
+// 创建各生命周期的合并策略
 lifeCycle.forEach((hook) => {
   strats[hook] = function (parentVal, childVal) {
     // 儿子有值 需要进行合并
@@ -61,7 +62,9 @@ lifeCycle.forEach((hook) => {
   };
 });
 
+// parentVal 为函数，childVal 为对象
 strats.components = function (parentVal, childVal) {
+  // 继承：子类可以沿着链找到父亲的属性 childVal.__proto__ = parentVal
   let res = Object.create(parentVal); //合并后产生一个新对象。不用原来的
   if (childVal) {
     for (let key in childVal) {
@@ -88,10 +91,11 @@ export function mergeOptions(parentVal, childVal) {
     }
   }
 
+  // 合并当前key
   function mergeFiled(key) {
-    // 设计模式 策略模式
+    // 设计模式 策略模式:获取当前key的合并策略 
     let strat = strats[key];
-    debugger
+    // debugger
     if (strat) {
       // 合并两个值
       options[key] = strat(parentVal[key], childVal[key]);

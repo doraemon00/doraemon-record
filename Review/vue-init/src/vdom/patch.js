@@ -1,6 +1,13 @@
 import { isSameVnode } from ".";
 
 export function patch(oldVnode, vnode) {
+  console.log(oldVnode, vnode, "oldVnode");
+
+  //   之前少了这个步骤 导致bug 无法排查
+  if (!oldVnode) {
+    return createElm(vnode); //产生一个组件的真实节点
+  }
+
   const isRealElement = oldVnode.nodeType;
 
   if (isRealElement) {
@@ -144,7 +151,17 @@ function updateChildren(el, oldChildren, newChildren) {
   }
 }
 
-function createComponent(vnode) {}
+// 给组件预留了 一个初始化流程 init
+function createComponent(vnode) {
+  let i = vnode.data;
+  if ((i = i.hook) && (i = i.init)) {
+    i(vnode);
+  }
+  if (vnode.componentInstance) {
+    // 说明是组件
+    return true;
+  }
+}
 
 export function createElm(vnode) {
   let { tag, data, children, text, vm } = vnode;
@@ -155,13 +172,16 @@ export function createElm(vnode) {
       return vnode.componentInstance.$el; // 对应的就是真实节点
     }
 
+    // 先创建 id app
     vnode.el = document.createElement(tag);
-    updateProperties(vnode);
+    updateProperties(vnode, data);
 
+    //再去查找 id app 的儿子 对儿子进行创建
     children.forEach((child) => {
-      vnode.el.appendChild(createElm(child));
+      vnode.el.appendChild(createElm(child)); //有创建组件和元素的功能
     });
   } else {
+    //   创建文本的真实节点
     vnode.el = document.createTextNode(text);
   }
   return vnode.el;

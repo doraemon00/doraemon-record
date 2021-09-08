@@ -273,7 +273,8 @@
 
     let strats = {}; //存放所有策略
 
-    let lifeCycle = ["beforeCreate", "created", "beforeMount", "mounted"];
+    let lifeCycle = ["beforeCreate", "created", "beforeMount", "mounted"]; // 创建各生命周期的合并策略
+
     lifeCycle.forEach(hook => {
       strats[hook] = function (parentVal, childVal) {
         // 儿子有值 需要进行合并
@@ -295,9 +296,10 @@
           return parentVal;
         }
       };
-    });
+    }); // parentVal 为函数，childVal 为对象
 
     strats.components = function (parentVal, childVal) {
+      // 继承：子类可以沿着链找到父亲的属性 childVal.__proto__ = parentVal
       let res = Object.create(parentVal); //合并后产生一个新对象。不用原来的
 
       if (childVal) {
@@ -327,12 +329,12 @@
         if (!parentVal.hasOwnProperty(key)) {
           mergeFiled(key);
         }
-      }
+      } // 合并当前key
+
 
       function mergeFiled(key) {
-        // 设计模式 策略模式
-        let strat = strats[key];
-        debugger;
+        // 设计模式 策略模式:获取当前key的合并策略 
+        let strat = strats[key]; // debugger
 
         if (strat) {
           // 合并两个值
@@ -357,7 +359,12 @@
 
     function initGlobalAPI(Vue) {
       // 全局属性 在每个组件初始化的时候 将这些属性放到每个组件上
-      Vue.options = {}; // 为 vue 添加 mixin 静态方法
+      Vue.options = {}; //存放全局组件的
+
+      Vue.options.components = {}; // Vue.component -> Vue.extend
+      // 在任何地方访问 vm.$options._base 都可以拿到 Vue
+
+      Vue.options._base = Vue; // 为 vue 添加 mixin 静态方法
       //  功能：存放mixin component filter directive 属性
 
       Vue.mixin = function (options) {
@@ -366,43 +373,54 @@
 
         return this;
       };
+      /**
+       * 使用基础的Vue构造器 创造一个子类
+       * @param {*} opt
+       * @returns
+       */
 
-      Vue.options._base = Vue; // 会产生一个子类
 
       Vue.extend = function (opt) {
-        const Super = this;
+        // 父类 Vue即当前this
+        const Super = this; // 创建子类Sub
 
-        const Sub = function () {//创造一个组件 其实就是new 这个组件的类（组件初始化）
-        };
+        const Sub = function (options) {
+          //创造一个组件 其实就是new 这个组件的类（组件初始化）
+          // 当new组件时，执行组件初始化
+          this._init(options);
+        }; // 子类继承父类
+
 
         Sub.prototype = Object.create(Super.prototype); //继承原型方法
 
         Sub.prototype.constructor = Sub; //Object.create 会产生一个新的实例作为子类的原型，此时 constructor 会指向错误
 
-        Sub.options = mergeOptions(Super.options, opt);
-        Sub.mixin = Vue.mixin;
+        Sub.options = mergeOptions(Super.options, opt); // Sub.mixin = Vue.mixin;
+
         return Sub;
-      }; //存放全局组件的
-
-
-      Vue.options.components = {}; // Vue.component -> Vue.extend
+      };
+      /**
+       *
+       * @param {*} id 组件名
+       * @param {*} definition 组件定义
+       */
       // definition 可以传入对象或函数
+
 
       Vue.component = function (id, definition) {
         let name = definition.name || id;
-        definition.name = name;
+        definition.name = name; // 如果传入的是对象，使用Vue.extend进行一次处理
 
         if (isObject(definition)) {
           definition = Vue.extend(definition);
-        }
+        } // 将 definition 对象保存到全局。Vue.options.components
+
 
         Vue.options.components[name] = definition;
         console.log(Vue.options.components);
-      };
+      }; // Vue.filter = function (options) {};
+      // Vue.directive = function (options) {};
 
-      Vue.filter = function (options) {};
-
-      Vue.directive = function (options) {};
     }
 
     let id$1 = 0;
@@ -542,7 +560,8 @@
         tag
       });
       return componentVnode;
-    }
+    } // 参数：_c('标签', {属性}, ...儿子)
+
 
     function createElement(vm, tag, data = {}, ...children) {
       // 返回虚拟节点 _c('',{}....)
@@ -550,6 +569,7 @@
       // 如何区分是组件还是元素节点
       if (!isReservedTag(tag)) {
         //组件
+        // 获取组件的构造函数：之前已经保存到了全局 vm.$options.components 上
         let Ctor = vm.$options.components[tag]; //组件的初始化就是 new 组件的构造函数
 
         return createComponent$1(vm, tag, data, children, data.key, Ctor);
@@ -591,6 +611,12 @@
     }
 
     function patch(oldVnode, vnode) {
+      console.log(oldVnode, vnode, "oldVnode"); //   之前少了这个步骤 导致bug 无法排查
+
+      if (!oldVnode) {
+        return createElm(vnode); //产生一个组件的真实节点
+      }
+
       const isRealElement = oldVnode.nodeType;
 
       if (isRealElement) {
@@ -732,9 +758,21 @@
           child && el.removeChild(child.el);
         }
       }
-    }
+    } // 给组件预留了 一个初始化流程 init
 
-    function createComponent(vnode) {}
+
+    function createComponent(vnode) {
+      let i = vnode.data;
+
+      if ((i = i.hook) && (i = i.init)) {
+        i(vnode);
+      }
+
+      if (vnode.componentInstance) {
+        // 说明是组件
+        return true;
+      }
+    }
 
     function createElm(vnode) {
       let {
@@ -746,17 +784,20 @@
       } = vnode;
 
       if (typeof tag === "string") {
-        if (createComponent()) {
+        if (createComponent(vnode)) {
           //返回一个组件的真实节点
           return vnode.componentInstance.$el; // 对应的就是真实节点
-        }
+        } // 先创建 id app
+
 
         vnode.el = document.createElement(tag);
-        updateProperties(vnode);
+        updateProperties(vnode, data); //再去查找 id app 的儿子 对儿子进行创建
+
         children.forEach(child => {
-          vnode.el.appendChild(createElm(child));
+          vnode.el.appendChild(createElm(child)); //有创建组件和元素的功能
         });
       } else {
+        //   创建文本的真实节点
         vnode.el = document.createTextNode(text);
       }
 
@@ -1025,6 +1066,7 @@
         initState(vm);
 
         if (vm.$options.el) {
+          // 将数据挂载到页面上（此时 数据已经被劫持）
           vm.$mount(vm.$options.el);
         }
       }; //new Vue({el})  new Vue().$mount
@@ -1100,6 +1142,9 @@
     initGlobalAPI(Vue); //初始化global Api
     // 2. 组件初始化的时候，会做一个合并 mergerOptions （自己的组件.__proto__ = 全局的组件）
     // 3. 内部会对模板进行编译操作， _c('组件的名字') 做筛查，如果是组件就创造一个组件的虚拟节点，还会判断Ctor ，如果是对象会调用Vue.extend ，所有的组件都是通过 Vue.extend 方法来实现的 （componentOptions 里面放着组件的所有内容，属性的实现，事件的实现，插槽的内容，Ctor）
+    // 4.创建组件的真实节点（new Ctor 拿到组件的实例，并且调用组件的$mount 方法（会生成一个$el对应组件模板渲染后的结果）） vnode.componentInstance = new Ctor() vnode.componentInstance.$el => 组件渲染后的结果
+    // 5.将组件的vnode.componentInstance.$el 插入到父标签中
+    // 6.组件在 new Ctor() 时会进行组件的初始化，给组件再次添加一个独立的渲染 watcher (每个组件都有自己的watcher),更新时，只需要更新自己组件对应的渲染watcher (因为组件渲染时，组件对应的属性会收集自己的渲染watcher)
 
     return Vue;
 
