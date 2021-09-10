@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script src="../dist/vue.js"></script>
+    <script>
+      let App = {
+        render(h) {
+          return h("h1", { class: "xxx" }, "hello chu");
+        },
+      };
+      const vm = new Vue({
+        el: "#app",
+        render: (h) => {
+          //_c => h createElement h = vm.$createElement
+          debugger;
+          return h(App);
+        },
+      });
+    </script>
+    <!-- 
+1.h(App) 会返回一个组件的虚拟节点
+2.过程 会先将用户的参数 变成一个 Ctor (Vue.extend)
+3.给组件的data上增加hook (init方法)
+4.返回一个组件的虚拟节点
+5.创造真实节点 patch -> createElm 会调用组件的init方法进行初始化
+vnode.componentInstance = new Ctor()
+组件.$mount() -> vm.$el
+vnode.componentInstance.$el 取到的就是组件要渲染的内容
+
+ -->
+  </body>
+</html>
