@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <script src="./promise/index.js"></script>
+    <script>
+        let promise = new Promise((resolve, reject) => {
+    setTimeout(() => {
+        // throw new Error('error')
+        reject('ok'); // 让promise变成成功态
+        resolve('ok')
+        // return new Error('失败')
+    }, 1000);
+})
+
+promise.then((value)=>{
+    console.log(value,'success')
+},(reason)=>{
+    console.log(reason,'fail')
+})
+
+    </script>
+</body>
+</html>
