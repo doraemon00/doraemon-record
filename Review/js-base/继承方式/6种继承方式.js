@@ -100,37 +100,65 @@
 // console.log(parent5.getName())
 
 
-function clone(parent,child){
-    // 创建对象并指定对象（两步合并为一步）
-    child.prototype = Object.create(parent.prototype)
-    // 增强对象
-    child.prototype.constructor = child
-    // console.log(child.prototype)
+
+// 6.寄生组合式继承
+// function clone(parent,child){
+//     // 创建对象并指定对象（两步合并为一步）
+//     child.prototype = Object.create(parent.prototype)
+//     // 增强对象
+//     child.prototype.constructor = child
+//     // console.log(child.prototype)
+// }
+
+// function Parent6(){
+//     this.name = 'parent6'
+//     this.play = [1,2,3]
+// }
+
+// Parent6.prototype.getName = function(){
+//     return this.name
+// }
+
+// function Child6(){
+//     Parent6.call(this)
+//     this.friends = 'child5'
+// }
+
+// clone(Parent6,Child6)
+
+// Child6.prototype.getFriends = function(){
+//     return this.friends
+// }
+
+// let person6 = new Child6()
+// console.log(person6)
+// console.log(person6.getName())
+
+
+
+// ES6
+class Person{
+    constructor(name){
+        this.name = name
+    }
+    getName(){
+        console.log(this.name)
+        // return this.name
+    }
 }
 
-function Parent6(){
-    this.name = 'parent6'
-    this.play = [1,2,3]
+class Gamer extends Person{
+    constructor(name,age){
+        // 子类中存在构造函数，则需要在使用 this 之前首先调用 super()
+        super(name)
+        this.age = age
+    }
 }
 
-Parent6.prototype.getName = function(){
-    return this.name
-}
+const asuna = new Gamer('asuna',18)
+asuna.getName()
 
-function Child6(){
-    Parent6.call(this)
-    this.friends = 'child5'
-}
 
-clone(Parent6,Child6)
-
-Child6.prototype.getFriends = function(){
-    return this.friends
-}
-
-let person6 = new Child6()
-console.log(person6)
-console.log(person6.getName())
 
 
 
