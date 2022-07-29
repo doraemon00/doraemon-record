@@ -9,8 +9,10 @@
   // var _  = function(){}  
 
   /* 这个对象，如何调用挂在 _函数上的方法呢？ */
-  var _ = function (){
-    
+  var _ = function (obj){
+    // this指向window
+    if(!(this instanceof _)) return new _(obj)
+    this._wrapped = obj
   }
 
   root._ = _
@@ -20,9 +22,11 @@
 })()
 
 
-let res = _.reverse('abc')
-console.log(res)
+_([1,2,3]) //{_wrapped:[1,2,3]}
 
+
+// let res = _.reverse('abc')
+// console.log(res)
 
 
 // console.log(window.window)
